@@ -4,7 +4,9 @@ import ro.siit.model.AllDebts;
 import ro.siit.model.Debt;
 import ro.siit.model.ServiceCompany;
 import ro.siit.model.TruckCompany;
+import ro.siit.service.ConnectionService;
 import ro.siit.service.DebtService;
+import ro.siit.service.TruckCompanyService;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -34,10 +36,14 @@ public class DebtController extends HttpServlet {
     public static final String SEARCH = "search";
 
     private DebtService debtService;
+    private TruckCompanyService truckCompanyService;
+    private ConnectionService connectionService;
 
     @Override
     public void init() throws ServletException {
-        this.debtService = DebtService.getInstance();
+        this.connectionService = ConnectionService.getInstance();
+        this.debtService = new DebtService();
+        this.truckCompanyService = new TruckCompanyService();
     }
 
     @Override
@@ -51,14 +57,14 @@ public class DebtController extends HttpServlet {
                 listTruckCompanies(req, resp);
                 break;
             case DELETE_TRUCK_COMPANY:
-                debtService.deleteTruckCompany(Integer.parseInt(req.getParameter("truck_id")));
+                truckCompanyService.deleteTruckCompany(Integer.parseInt(req.getParameter("truck_id")));
                 listTruckCompanies(req, resp);
                 break;
             case SHOW_ADD_FORM_FOR_TRUCK_COMPANY:
                 req.getRequestDispatcher("jsp/addForm.jsp").forward(req, resp);
                 break;
             case SHOW_EDIT_FORM_FOR_TRUCK_COMPANY:
-                TruckCompany truckCompany = debtService.getTruckCompany(Integer.parseInt(req.getParameter("truck_id")));
+                TruckCompany truckCompany = truckCompanyService.getTruckCompany(Integer.parseInt(req.getParameter("truck_id")));
                 req.setAttribute("oldCUI", truckCompany.getCUI());
                 req.setAttribute("CUI", truckCompany.getCUI());
                 req.setAttribute("tCompanyName", truckCompany.gettCompanyName());
@@ -112,12 +118,12 @@ public class DebtController extends HttpServlet {
                 break;
             case ADD_TRUCK_COMPANY:
                 TruckCompany truckCompany = new TruckCompany(Integer.parseInt(req.getParameter("CUI")), req.getParameter("tCompanyName"));
-                debtService.addTruckCompany(truckCompany);
+                truckCompanyService.addTruckCompany(truckCompany);
                 listTruckCompanies(req, resp);
                 break;
             case EDIT_TRUCK_COMPANY:
                 int oldCUI = Integer.parseInt(req.getParameter("oldCUI"));
-                debtService.updateTruckCompany(new TruckCompany(Integer.parseInt(req.getParameter("CUI")), req.getParameter("tCompanyName")), oldCUI);
+                truckCompanyService.updateTruckCompany(new TruckCompany(Integer.parseInt(req.getParameter("CUI")), req.getParameter("tCompanyName")), oldCUI);
                 listTruckCompanies(req, resp);
                 break;
             case SEARCH:
@@ -134,7 +140,7 @@ public class DebtController extends HttpServlet {
     }
 
     private void listTruckCompanies(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        List<TruckCompany> truckCompanies = debtService.getCompanies();
+        List<TruckCompany> truckCompanies = truckCompanyService.getCompanies();
         req.setAttribute(TRUCK_COMPANY_LIST, truckCompanies);
         req.getRequestDispatcher("jsp/list.jsp").forward(req, resp);
     }
